@@ -8,3 +8,4 @@ sounddevice==0.4.6
 transformers==4.38.2
 espnet_model_zoo
 torchaudio
+s3prl
