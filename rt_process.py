@@ -1,5 +1,6 @@
 import sounddevice as sd
 import numpy as np
+import librosa
 import pyworld
 from espnet2.bin.asr_inference import Speech2Text
 from transformers import pipeline
@@ -69,7 +70,7 @@ def pitch_detection():
         # print(f"Volume: {audio_volume}")
 
         # Print pitch information
-        print(f"Pitch: {avg_audio_f0}")
+        # print(f"Pitch: {avg_audio_f0}")
 
         threshold = 0.05
         if audio_volume > threshold and avg_audio_f0 > 50 and avg_audio_f0 < 500:
@@ -160,24 +161,27 @@ def asr_recognition():
             # Text emotion classification
             if text != "":
                 output = sentiment_classifier(text)
-            print(f"Emotion: {output}")
+                print(f"Emotion: {output}")
 
-            if output[0]["label"] == "anger":
-                emo_index = 1
-            elif output[0]["label"] == "disgust":
-                emo_index = 2
-            elif output[0]["label"] == "fear":
-                emo_index = 3
-            elif output[0]["label"] == "joy":
-                emo_index = 4
-            elif output[0]["label"] == "neutral":
-                emo_index = 5
-            elif output[0]["label"] == "sadness":
-                emo_index = 6
-            elif output[0]["label"] == "surprise":
-                emo_index = 7
+                if output[0]["label"] == "anger":
+                    emo_index = 1
+                elif output[0]["label"] == "disgust":
+                    emo_index = 2
+                elif output[0]["label"] == "fear":
+                    emo_index = 3
+                elif output[0]["label"] == "joy":
+                    emo_index = 4
+                elif output[0]["label"] == "neutral":
+                    emo_index = 5
+                elif output[0]["label"] == "sadness":
+                    emo_index = 6
+                elif output[0]["label"] == "surprise":
+                    emo_index = 7
+                else:
+                    emo_index = 0
             else:
-                emo_index = 0
+                emo_index = 5
+                output = None
 
             if sentiment == "Neutral":
                 sentiment_index = 1
@@ -192,9 +196,10 @@ def asr_recognition():
             print(f"Light Color: {light_color}")
 
             osc_client.send_message("/text", text)
-            osc_client.send_message("/sentiment", sentiment)
-            osc_client.send_message("/emotion", output[0]["label"])
-            osc_client.send_message("/confidence", output[0]["score"])
+            osc_client.send_message("/sentiment", sentiment_index)
+            osc_client.send_message("/emotion", emo_index)
+            if output:
+                osc_client.send_message("/confidence", output[0]["score"])
             r, g, b = light_color
             osc_client.send_message("/rgb", [r, g, b])
 
@@ -210,29 +215,143 @@ def callback(indata, frames, time, status):
     asr_audio_queue.put(audio.copy())  # Put audio in the queue for ASR
 
 
-# Start the audio stream
-with sd.InputStream(
-    samplerate=sample_rate,
-    channels=1,
-    callback=callback,
-    blocksize=int(pitch_duration * sample_rate),
-):
-    print("Start Real-Time Pitch Detection and ASR, Press Ctrl+C to stop.")
+def process_realtime():
+    # Start the audio stream
+    with sd.InputStream(
+        samplerate=sample_rate,
+        channels=1,
+        callback=callback,
+        blocksize=int(pitch_duration * sample_rate),
+    ):
+        print("Start Real-Time Pitch Detection and ASR, Press Ctrl+C to stop.")
 
-    # Start the pitch detection thread
-    pitch_thread = threading.Thread(target=pitch_detection)
-    pitch_thread.start()
+        # Start the pitch detection thread
+        pitch_thread = threading.Thread(target=pitch_detection)
+        pitch_thread.start()
 
-    # Start the ASR thread
-    asr_thread = threading.Thread(target=asr_recognition)
-    asr_thread.start()
+        # Start the ASR thread
+        asr_thread = threading.Thread(target=asr_recognition)
+        asr_thread.start()
 
+        try:
+            while True:
+                time.sleep(0.1)  # Main thread can sleep for a short duration
+        except KeyboardInterrupt:
+            audio_queue.put(None)  # Stop the threads
+            asr_audio_queue.put(None)
+            pitch_thread.join()
+            asr_thread.join()
+            print("Stopped Real-Time Pitch Detection and ASR")
+
+
+def process_audiofile(path):
+    audio, sr = librosa.load(path, sr=sample_rate)
+    frame_size = int(
+        pitch_duration * sample_rate
+    )  # Size of each frame for pitch detection
+    asr_frame_size = int(asr_duration * sample_rate)  # Size of each frame for ASR
+
+    asr_audio = np.array([])  # Initialize an empty array for ASR
+
+    for i in range(0, len(audio), frame_size):
+        frame = audio[i : i + frame_size]
+        if len(frame) < frame_size:
+            frame = np.pad(
+                frame, (0, frame_size - len(frame)), "constant"
+            )  # Pad the last frame if needed
+
+        # Process pitch detection
+        pitch_detection_audio(frame)
+
+        # Concatenate frame for ASR
+        asr_audio = np.concatenate((asr_audio, frame))
+
+        # Check if it's time to process ASR
+        if len(asr_audio) >= asr_frame_size:
+            asr_recognition_audio(
+                asr_audio[:asr_frame_size]
+            )  # Process the first 5s of audio for ASR
+            asr_audio = asr_audio[asr_frame_size:]  # Remove the processed audio
+
+
+# Modified pitch detection function
+def pitch_detection_audio(audio):
+    # Extract pitch using PyWorld
+    audio_f0, timeaxis = pyworld.harvest(audio.astype(np.double), sample_rate)
+    audio_f0 = pyworld.stonemask(
+        audio.astype(np.double), audio_f0, timeaxis, sample_rate
+    )
+    avg_audio_f0 = np.nanmean(audio_f0)  # Get the average pitch
+
+    # Extract volume
+    audio_volume = np.sqrt(np.mean(audio**2))
+
+    # Print pitch information
+    # print(f"Pitch: {avg_audio_f0}")
+
+    threshold = 0.05
+    if audio_volume > threshold and avg_audio_f0 > 50 and avg_audio_f0 < 500:
+        osc_client.send_message("/pitch", avg_audio_f0)  # Send pitch to Max/MSP
+
+
+# Modified ASR function
+def asr_recognition_audio(audio):
+    # Speech to sentiment and text
+    text, *_ = asr_model(audio)[0]
     try:
-        while True:
-            time.sleep(0.1)  # Main thread can sleep for a short duration
-    except KeyboardInterrupt:
-        audio_queue.put(None)  # Stop the threads
-        asr_audio_queue.put(None)
-        pitch_thread.join()
-        asr_thread.join()
-        print("Stopped Real-Time Pitch Detection and ASR")
+        sentiment, text = text.split(" ", 1)
+    except ValueError:
+        sentiment = "Neutral"
+        text = ""
+    print(f"Sentiment: {sentiment}")
+    print(f"Recognized Text: {text}")
+
+    # Text emotion classification
+    if text != "":
+        output = sentiment_classifier(text)
+    print(f"Emotion: {output}")
+
+    if output[0]["label"] == "anger":
+        emo_index = 1
+    elif output[0]["label"] == "disgust":
+        emo_index = 2
+    elif output[0]["label"] == "fear":
+        emo_index = 3
+    elif output[0]["label"] == "joy":
+        emo_index = 4
+    elif output[0]["label"] == "neutral":
+        emo_index = 5
+    elif output[0]["label"] == "sadness":
+        emo_index = 6
+    elif output[0]["label"] == "surprise":
+        emo_index = 7
+    else:
+        emo_index = 0
+
+    if sentiment == "Neutral":
+        sentiment_index = 1
+    elif sentiment == "Positive":
+        sentiment_index = 2
+    elif sentiment == "Negative":
+        sentiment_index = 3
+    else:
+        sentiment_index = 0
+
+    light_color = get_rgb_color(emo_index, sentiment_index)
+    print(f"Light Color: {light_color}")
+
+    osc_client.send_message("/text", text)
+    osc_client.send_message("/sentiment", sentiment_index)
+    osc_client.send_message("/emotion", emo_index)
+    osc_client.send_message("/confidence", output[0]["score"])
+    r, g, b = light_color
+    osc_client.send_message("/rgb", [r, g, b])
+
+
+if __name__ == "__main__":
+    process_realtime()
+
+    # Process the audio file
+    # process_audiofile(
+    #     "/Users/yyf/Documents/GitHub/hackathon2024/barackobamasenatespeechrosaparks.mp3"
+    # )
