@@ -14,6 +14,9 @@ int redPin= 11;
 int greenPin = 9;
 int  bluePin = 10;
 
+String inputString = "/r 255";
+int a = 0, b = 0, c = 0; 
+
 int value = 0;
 
 const int trigPin1 = 7;
@@ -37,17 +40,43 @@ void setup() {
 }
 
 void loop() {
-  value = Serial.read();
-  if (value == 1)
-  {
-    setColor(80, 210, 255); 
+  
+  if (Serial.available() >= 3) {
+
+    int redValue = Serial.read();
+    int greenValue = Serial.read();
+    int blueValue = Serial.read();
+
+    Serial.println(redValue);
+    Serial.println(greenValue);
+    Serial.println(blueValue);
+
+
+    analogWrite(redPin, redValue);
+    analogWrite(greenPin, greenValue);
+    analogWrite(bluePin, blueValue);
   }
+
+  value = Serial.read();
+  // if (value == 2)
+  // {
+  //   setColor(90, 210, 10); 
+  // }
   if (value == 0)
   {
     setColor(0, 0, 0); 
   }
+  
+  // if (value == 1)
+  // {
+  //   setColor(80, 210, 255); 
+  // }
+  // if (value == 0)
+  // {
+  //   setColor(0, 0, 0); 
+  // }
 
-  Serial.println(value);
+  // Serial.println(value);
 
   digitalWrite(trigPin1, LOW);
   delayMicroseconds(2);
@@ -75,9 +104,15 @@ void loop() {
   delay(30);
 }
 
+
 void setColor(int redValue, int greenValue,  int blueValue) {
   analogWrite(redPin, 255 - redValue);
   analogWrite(greenPin,  255 - greenValue);
   analogWrite(bluePin, 255 - blueValue);
 }
 
+void setColor1(int redValue, int greenValue,  int blueValue) {
+  analogWrite(redPin, 80);
+  analogWrite(greenPin, 90);
+  analogWrite(bluePin, 255);
+}
