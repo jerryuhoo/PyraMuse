@@ -3,14 +3,14 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 2,
-			"revision" : 1,
+			"minor" : 5,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 421.0, 125.0, 1286.0, 726.0 ],
+		"rect" : [ 192.0, 125.0, 1286.0, 726.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -82,7 +82,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 411.239055067300797, 352.0, 35.0, 22.0 ],
-					"presentation_linecount" : 2,
 					"text" : "1000"
 				}
 
@@ -700,7 +699,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 954.5, 526.0, 50.0, 22.0 ],
-					"text" : "63.15"
+					"text" : "5.61"
 				}
 
 			}
@@ -712,7 +711,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 773.0, 577.0, 50.0, 22.0 ],
-					"text" : "25.3"
+					"text" : "11.82"
 				}
 
 			}
@@ -761,7 +760,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 738.0, 397.0, 50.0, 49.0 ],
-					"text" : "Distance1 175.82"
+					"text" : "Distance2 213.21"
 				}
 
 			}
@@ -924,13 +923,12 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-96",
-					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 13.5, 234.995580643415451, 50.0, 35.0 ],
-					"text" : "93.305832"
+					"patching_rect" : [ 13.5, 234.995580643415451, 50.0, 22.0 ],
+					"text" : "0."
 				}
 
 			}

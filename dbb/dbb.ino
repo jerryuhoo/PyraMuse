@@ -14,7 +14,6 @@ int redPin= 11;
 int greenPin = 9;
 int  bluePin = 10;
 
-String inputString = "/r 255";
 int a = 0, b = 0, c = 0; 
 
 int value = 0;
@@ -47,14 +46,7 @@ void loop() {
     int greenValue = Serial.read();
     int blueValue = Serial.read();
 
-    Serial.println(redValue);
-    Serial.println(greenValue);
-    Serial.println(blueValue);
-
-
-    analogWrite(redPin, redValue);
-    analogWrite(greenPin, greenValue);
-    analogWrite(bluePin, blueValue);
+    setColor(redValue, greenValue, blueValue);
   }
 
   value = Serial.read();
@@ -77,7 +69,7 @@ void loop() {
   // }
 
   // Serial.println(value);
-
+  // setColor(80, 210, 255);
   digitalWrite(trigPin1, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin1, HIGH);
