@@ -308,7 +308,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 89.0, 441.0, 50.0, 22.0 ],
-					"text" : "42"
+					"text" : "46"
 				}
 
 			}
@@ -699,7 +699,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 954.5, 526.0, 50.0, 22.0 ],
-					"text" : "5.61"
+					"text" : "67.37"
 				}
 
 			}
@@ -711,7 +711,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 773.0, 577.0, 50.0, 22.0 ],
-					"text" : "11.82"
+					"text" : "9.48"
 				}
 
 			}
@@ -760,7 +760,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 738.0, 397.0, 50.0, 49.0 ],
-					"text" : "Distance2 213.21"
+					"text" : "Distance2 212.27"
 				}
 
 			}
@@ -923,12 +923,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-96",
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 13.5, 234.995580643415451, 50.0, 22.0 ],
-					"text" : "0."
+					"patching_rect" : [ 13.5, 234.995580643415451, 50.0, 35.0 ],
+					"text" : "119.490425"
 				}
 
 			}
@@ -1007,13 +1008,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-6",
-					"linecount" : 3,
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 627.239055067300797, 124.0, 50.0, 49.0 ],
-					"text" : "225 225 225"
+					"patching_rect" : [ 627.239055067300797, 124.0, 50.0, 35.0 ],
+					"text" : "195 195 195"
 				}
 
 			}
@@ -1038,7 +1039,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 509.239055067300797, 124.0, 50.0, 35.0 ],
-					"text" : "0.950907"
+					"text" : "0.958828"
 				}
 
 			}
@@ -1050,7 +1051,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 396.239055067300797, 124.0, 50.0, 22.0 ],
-					"text" : "1"
+					"text" : "3"
 				}
 
 			}
@@ -1081,11 +1082,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-95",
+					"linecount" : 6,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 321.239055067300797, 124.0, 52.0, 22.0 ]
+					"patching_rect" : [ 321.239055067300797, 124.0, 52.0, 89.0 ],
+					"text" : "\"why not going to\""
 				}
 
 			}
@@ -1134,7 +1137,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 164.239055067300797, 111.415124028921127, 50.0, 35.0 ],
-					"text" : "173.840866"
+					"text" : "119.490425"
 				}
 
 			}
@@ -2123,7 +2126,16 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-89", 1 ],
+					"order" : 1,
+					"source" : [ "obj-85", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-90", 1 ],
+					"order" : 0,
 					"source" : [ "obj-85", 0 ]
 				}
 
