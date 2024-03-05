@@ -321,14 +321,21 @@ def pitch_detection_audio(audio):
 # Modified ASR function
 def asr_recognition_audio(audio):
     # Speech to sentiment and text
-    text, *_ = asr_model(audio)[0]
-    try:
-        sentiment, text = text.split(" ", 1)
-    except ValueError:
-        sentiment = "Neutral"
-        text = ""
-    print(f"Sentiment: {sentiment}")
-    print(f"Recognized Text: {text}")
+    # text, *_ = asr_model(audio)[0]
+    # try:
+    #     sentiment, text = text.split(" ", 1)
+    # except ValueError:
+    #     sentiment = "Neutral"
+    #     text = ""
+    # print(f"Sentiment: {sentiment}")
+    # print(f"Recognized Text: {text}")
+
+    input_features = processor(
+        audio, sampling_rate=sample_rate, return_tensors="pt"
+    ).input_features
+    predicted_ids = model.generate(input_features)
+    text = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
+    print("ASR: ", text)
 
     # Text emotion classification
     if text != "":
@@ -352,20 +359,20 @@ def asr_recognition_audio(audio):
     else:
         emo_index = 0
 
-    if sentiment == "Neutral":
-        sentiment_index = 1
-    elif sentiment == "Positive":
-        sentiment_index = 2
-    elif sentiment == "Negative":
-        sentiment_index = 3
-    else:
-        sentiment_index = 0
+    # if sentiment == "Neutral":
+    #     sentiment_index = 1
+    # elif sentiment == "Positive":
+    #     sentiment_index = 2
+    # elif sentiment == "Negative":
+    #     sentiment_index = 3
+    # else:
+    #     sentiment_index = 0
 
-    light_color = get_rgb_color(emo_index, sentiment_index)
+    light_color = get_rgb_color(emo_index)
     print(f"Light Color: {light_color}")
 
     osc_client.send_message("/text", text)
-    osc_client.send_message("/sentiment", sentiment_index)
+    # osc_client.send_message("/sentiment", sentiment_index)
     osc_client.send_message("/emotion", emo_index)
     osc_client.send_message("/confidence", output[0]["score"])
     r, g, b = light_color
