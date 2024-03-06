@@ -56,6 +56,7 @@ sentiment_classifier = pipeline(
 # set the recording parameters
 pitch_duration = 0.1  # Duration for pitch detection
 asr_duration = 3  # Duration for ASR
+threshold = 0.02  # Threshold for volume detection
 sample_rate = 16000
 audio_queue = queue.Queue()
 asr_audio_queue = queue.Queue()
@@ -82,21 +83,105 @@ def pitch_detection():
         # Print pitch information
         # print(f"Pitch: {avg_audio_f0}")
 
-        threshold = 0.05
         if audio_volume > threshold and avg_audio_f0 > 50 and avg_audio_f0 < 500:
             osc_client.send_message("/pitch", avg_audio_f0)  # Send pitch to Max/MSP
+        else:
+            osc_client.send_message("/pitch", 0)
+
+
+# ASR function
+def asr_recognition():
+    asr_audio = np.array([])  # Initialize an empty array to store audio for ASR
+    while True:
+        audio = asr_audio_queue.get()  # Get audio from the queue
+        if audio is None:
+            break  # Stop the thread if None is received
+
+        asr_audio = np.concatenate((asr_audio, audio))  # Concatenate the audio for ASR
+
+        if len(asr_audio) >= asr_duration * sample_rate:
+            # Speech to sentiment and text
+            # text, *_ = asr_model(asr_audio)[0]
+            # print(f"ASR Text: {text}")
+            audio_volume = np.sqrt(np.mean(asr_audio**2))
+            if audio_volume > threshold:
+                start_time = time.time()
+                input_features = processor(
+                    asr_audio, sampling_rate=sample_rate, return_tensors="pt"
+                ).input_features
+                predicted_ids = model.generate(input_features)
+                text = processor.batch_decode(predicted_ids, skip_special_tokens=True)[
+                    0
+                ]
+                print(f"ASR Time: {time.time() - start_time}")
+
+                print("ASR: ", text)
+                # try:
+                #     sentiment, text = text.split(" ", 1)
+                # except ValueError:
+                #     sentiment = "Neutral"
+                #     text = ""
+                # print(f"Sentiment: {sentiment}")
+                # print(f"Recognized Text: {text}")
+
+                # Text emotion classification
+                if text != "":
+                    output = sentiment_classifier(text)
+                    print(f"Emotion: {output}")
+
+                    if output[0]["label"] == "anger":
+                        emo_index = 1
+                    elif output[0]["label"] == "disgust":
+                        emo_index = 2
+                    elif output[0]["label"] == "fear":
+                        emo_index = 3
+                    elif output[0]["label"] == "joy":
+                        emo_index = 4
+                    elif output[0]["label"] == "neutral":
+                        emo_index = 5
+                    elif output[0]["label"] == "sadness":
+                        emo_index = 6
+                    elif output[0]["label"] == "surprise":
+                        emo_index = 7
+                    else:
+                        emo_index = 0
+                else:
+                    emo_index = 5
+                    output = None
+
+                # if sentiment == "Neutral":
+                #     sentiment_index = 1
+                # elif sentiment == "Positive":
+                #     sentiment_index = 2
+                # elif sentiment == "Negative":
+                #     sentiment_index = 3
+                # else:
+                #     sentiment_index = 0
+
+                light_color = get_rgb_color(emo_index)
+                print(f"Light Color: {light_color}")
+
+                osc_client.send_message("/text", text)
+                # osc_client.send_message("/sentiment", sentiment_index)
+                osc_client.send_message("/emotion", emo_index)
+                if output:
+                    osc_client.send_message("/confidence", output[0]["score"])
+                r, g, b = light_color
+                osc_client.send_message("/rgb", [r, g, b])
+
+            asr_audio = np.array([])  # Clear the audio array for the next ASR
 
 
 def get_rgb_color(emo_index, sentiment_index=2):
     # define the color for each emotion
     colors = {
-        1: (225, 50, 50),  # anger - red
-        2: (50, 128, 50),  # disgust - green
+        1: (225, 0, 0),  # anger - red
+        2: (30, 176, 15),  # disgust - green
         3: (200, 50, 205),  # fear - purple
-        4: (225, 225, 50),  # joy - yellow
+        4: (255, 229, 8),  # joy - yellow
         5: (225, 225, 225),  # neutral - white
         6: (50, 180, 225),  # sadness - blue
-        7: (225, 165, 50),  # surprise - orange
+        7: (255, 130, 0),  # surprise - orange
     }
 
     # based on the sentiment and emotion, adjust the color
@@ -145,85 +230,6 @@ surprise + Neutral: RGB(225, 165, 50)
 surprise + Positive: RGB(255, 195, 80)
 surprise + Negative: RGB(195, 135, 20)
 """
-
-
-# ASR function
-def asr_recognition():
-    asr_audio = np.array([])  # Initialize an empty array to store audio for ASR
-    while True:
-        audio = asr_audio_queue.get()  # Get audio from the queue
-        if audio is None:
-            break  # Stop the thread if None is received
-
-        asr_audio = np.concatenate((asr_audio, audio))  # Concatenate the audio for ASR
-
-        if len(asr_audio) >= asr_duration * sample_rate:
-            # Speech to sentiment and text
-            # text, *_ = asr_model(asr_audio)[0]
-            # print(f"ASR Text: {text}")
-            start_time = time.time()
-            input_features = processor(
-                asr_audio, sampling_rate=sample_rate, return_tensors="pt"
-            ).input_features
-            predicted_ids = model.generate(input_features)
-            text = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
-            print(f"ASR Time: {time.time() - start_time}")
-
-            print("ASR: ", text)
-            # try:
-            #     sentiment, text = text.split(" ", 1)
-            # except ValueError:
-            #     sentiment = "Neutral"
-            #     text = ""
-            # print(f"Sentiment: {sentiment}")
-            # print(f"Recognized Text: {text}")
-
-            # Text emotion classification
-            if text != "":
-                output = sentiment_classifier(text)
-                print(f"Emotion: {output}")
-
-                if output[0]["label"] == "anger":
-                    emo_index = 1
-                elif output[0]["label"] == "disgust":
-                    emo_index = 2
-                elif output[0]["label"] == "fear":
-                    emo_index = 3
-                elif output[0]["label"] == "joy":
-                    emo_index = 4
-                elif output[0]["label"] == "neutral":
-                    emo_index = 5
-                elif output[0]["label"] == "sadness":
-                    emo_index = 6
-                elif output[0]["label"] == "surprise":
-                    emo_index = 7
-                else:
-                    emo_index = 0
-            else:
-                emo_index = 5
-                output = None
-
-            # if sentiment == "Neutral":
-            #     sentiment_index = 1
-            # elif sentiment == "Positive":
-            #     sentiment_index = 2
-            # elif sentiment == "Negative":
-            #     sentiment_index = 3
-            # else:
-            #     sentiment_index = 0
-
-            light_color = get_rgb_color(emo_index)
-            print(f"Light Color: {light_color}")
-
-            osc_client.send_message("/text", text)
-            # osc_client.send_message("/sentiment", sentiment_index)
-            osc_client.send_message("/emotion", emo_index)
-            if output:
-                osc_client.send_message("/confidence", output[0]["score"])
-            r, g, b = light_color
-            osc_client.send_message("/rgb", [r, g, b])
-
-            asr_audio = np.array([])  # Clear the audio array for the next ASR
 
 
 # Callback function for the audio stream
@@ -316,6 +322,8 @@ def pitch_detection_audio(audio):
     threshold = 0.05
     if audio_volume > threshold and avg_audio_f0 > 50 and avg_audio_f0 < 500:
         osc_client.send_message("/pitch", avg_audio_f0)  # Send pitch to Max/MSP
+    else:
+        osc_client.send_message("/pitch", 0)
 
 
 # Modified ASR function
