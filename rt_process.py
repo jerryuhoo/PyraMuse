@@ -178,7 +178,7 @@ def get_rgb_color(emo_index, sentiment_index=2):
         1: (225, 0, 0),  # anger - red
         2: (30, 176, 15),  # disgust - green
         3: (200, 50, 205),  # fear - purple
-        4: (255, 229, 8),  # joy - yellow
+        4: (255, 230, 8),  # joy - yellow
         5: (225, 225, 225),  # neutral - white
         6: (50, 180, 225),  # sadness - blue
         7: (255, 130, 0),  # surprise - orange
