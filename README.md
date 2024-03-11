@@ -9,4 +9,6 @@ The voice signal is captured by a microphone. We use the speech recognition mode
 ## Pictures
 
 ## Videos
+[Featured](https://youtu.be/l0rlz_A400Q)
 
+[About](https://youtu.be/Ce494Tpk0Xg)
