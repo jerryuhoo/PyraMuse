@@ -7,6 +7,8 @@ PyraMuse is a musical interface that transforms voice into music. We mostly shar
 The voice signal is captured by a microphone. We use the speech recognition model "Whisper" in Python to identify words and a text emotion recognition model to detect emotions. The pitch of the voice is detected in Python and sent to Max via OSC protocol. Ultrasonic sensors measure the distance of each hand from the sensors, with Arduino gathering the data. This data is then sent to Max and Ableton to control the pitch and the vibrato effects. The MIDI information is sent to Ableton to generate musical compositions. There are four types of music—joy, sadness, anger, and neutrality—are mapped to four patterns in Ableton. Additionally, Max communicates the emotion data to Arduino via serial communication to control the LED light, with each emotion mapping to a distinct light color.
 
 ## Pictures
+![Pyramuse 1](pics/pyramuse-main.jpg)
+![Pyramuse 1](pics/pyramuse-prototype.jpg)
 
 ## Videos
 [Featured](https://youtu.be/l0rlz_A400Q)
